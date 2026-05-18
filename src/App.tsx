@@ -191,6 +191,19 @@ function RichEditor({
         >
           {uploading ? '上传中...' : '🖼 图片'}
         </ToolBtn>
+        <ToolBtn
+          onClick={() => {
+            const url = window.prompt('请输入图片地址（https://...）')
+            if (url && url.startsWith('http')) {
+              editor.chain().focus().setImage({ src: url }).run()
+            } else if (url) {
+              alert('请输入有效的图片地址')
+            }
+          }}
+          title="插入网络图片"
+        >
+          🔗 网络图片
+        </ToolBtn>
         <input
           ref={fileRef}
           type="file"
