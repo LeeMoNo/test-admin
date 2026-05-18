@@ -271,13 +271,12 @@ function ArticleForm({
   }
 
   return (
-    <div style={{ maxWidth: 860, margin: '0 auto', padding: '0 0 60px' }}>
-      {/* Header */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 28 }}>
-        <button onClick={onCancel} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#6b7280', fontSize: 14, display: 'flex', alignItems: 'center', gap: 6 }}>
+    <div className="form-shell">
+      <div className="form-toolbar">
+        <button type="button" onClick={onCancel} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#6b7280', fontSize: 14, display: 'flex', alignItems: 'center', gap: 6 }}>
           ← 返回列表
         </button>
-        <div style={{ display: 'flex', gap: 10 }}>
+        <div className="form-toolbar-actions">
           {msg && <span style={{ fontSize: 13, color: msg.startsWith('✅') ? '#059669' : '#dc2626', alignSelf: 'center' }}>{msg}</span>}
           <button
             onClick={() => save(false)}
@@ -411,18 +410,15 @@ function ArticleList({
   return (
     <div>
       {/* Header */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
+      <header className="page-header">
         <div>
-          <h1 style={{ margin: 0, fontSize: 22, fontWeight: 700, color: '#111827' }}>内容管理</h1>
-          <p style={{ margin: '4px 0 0', fontSize: 14, color: '#6b7280' }}>管理所有文章和视频</p>
+          <h1>内容管理</h1>
+          <p className="page-header-sub">管理所有文章和视频</p>
         </div>
-        <button
-          onClick={onCreate}
-          style={{ padding: '10px 20px', background: '#4f46e5', color: '#fff', border: 'none', borderRadius: 10, cursor: 'pointer', fontSize: 14, fontWeight: 500 }}
-        >
+        <button type="button" className="btn-primary" onClick={onCreate}>
           + 新建内容
         </button>
-      </div>
+      </header>
 
       {loading && <p style={{ color: '#9ca3af', textAlign: 'center', padding: 40 }}>加载中...</p>}
       {error && <p style={{ color: '#dc2626', textAlign: 'center', padding: 20 }}>{error}</p>}
@@ -435,74 +431,48 @@ function ArticleList({
       )}
 
       {/* List */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+      <div className="article-list">
         {articles.map((a) => (
-          <div
-            key={a.id}
-            style={{
-              background: '#fff',
-              border: '1px solid #f3f4f6',
-              borderRadius: 12,
-              padding: '16px 20px',
-              display: 'flex',
-              alignItems: 'center',
-              gap: 16,
-              transition: 'border-color 0.15s',
-            }}
-          >
-            {/* Type icon */}
-            <div style={{ fontSize: 22, flexShrink: 0 }}>{a.type === 'video' ? '🎬' : '📄'}</div>
-
-            {/* Info */}
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ fontWeight: 600, fontSize: 15, color: '#111827', marginBottom: 4, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                {a.title || '（无标题）'}
-              </div>
-              <div style={{ fontSize: 12, color: '#9ca3af' }}>
+          <article key={a.id} className="article-card">
+            <span className="article-card-icon" aria-hidden>{a.type === 'video' ? '🎬' : '📄'}</span>
+            <div className="article-card-body">
+              <div className="article-card-title">{a.title || '（无标题）'}</div>
+              <div className="article-card-meta">
                 创建于 {new Date(a.created_at).toLocaleDateString('zh-CN')}
                 {a.published_at && ` · 发布于 ${new Date(a.published_at).toLocaleDateString('zh-CN')}`}
               </div>
             </div>
-
-            {/* Status badge */}
-            <div
-              style={{
-                padding: '3px 10px',
-                borderRadius: 20,
-                fontSize: 12,
-                fontWeight: 500,
-                background: a.status === 'published' ? '#d1fae5' : '#fef3c7',
-                color: a.status === 'published' ? '#065f46' : '#92400e',
-                flexShrink: 0,
-              }}
-            >
-              {a.status === 'published' ? '已发布' : '草稿'}
-            </div>
-
-            {/* Actions */}
-            <div style={{ display: 'flex', gap: 8, flexShrink: 0 }}>
-              <button
-                onClick={() => onEdit(a)}
-                style={{ padding: '6px 14px', borderRadius: 8, border: '1px solid #e5e7eb', background: '#fff', cursor: 'pointer', fontSize: 13, color: '#374151' }}
-              >
-                编辑
-              </button>
-              {a.status === 'draft' && (
+            <div className="article-card-trailing">
+              <span className={`article-status article-status--${a.status === 'published' ? 'published' : 'draft'}`}>
+                {a.status === 'published' ? '已发布' : '草稿'}
+              </span>
+              <div className="article-card-actions">
                 <button
-                  onClick={() => handlePublish(a.id)}
-                  style={{ padding: '6px 14px', borderRadius: 8, border: 'none', background: '#4f46e5', color: '#fff', cursor: 'pointer', fontSize: 13, fontWeight: 500 }}
+                  type="button"
+                  onClick={() => onEdit(a)}
+                  style={{ padding: '6px 14px', borderRadius: 8, border: '1px solid #e5e7eb', background: '#fff', cursor: 'pointer', fontSize: 13, color: '#374151' }}
                 >
-                  发布
+                  编辑
                 </button>
-              )}
-              <button
-                onClick={() => handleDelete(a.id)}
-                style={{ padding: '6px 10px', borderRadius: 8, border: '1px solid #fee2e2', background: '#fff', cursor: 'pointer', fontSize: 13, color: '#dc2626' }}
-              >
-                删除
-              </button>
+                {a.status === 'draft' && (
+                  <button
+                    type="button"
+                    onClick={() => handlePublish(a.id)}
+                    style={{ padding: '6px 14px', borderRadius: 8, border: 'none', background: '#4f46e5', color: '#fff', cursor: 'pointer', fontSize: 13, fontWeight: 500 }}
+                  >
+                    发布
+                  </button>
+                )}
+                <button
+                  type="button"
+                  onClick={() => handleDelete(a.id)}
+                  style={{ padding: '6px 10px', borderRadius: 8, border: '1px solid #fee2e2', background: '#fff', cursor: 'pointer', fontSize: 13, color: '#dc2626' }}
+                >
+                  删除
+                </button>
+              </div>
             </div>
-          </div>
+          </article>
         ))}
       </div>
     </div>
@@ -514,51 +484,43 @@ export default function App() {
   const [view, setView] = useState<'list' | 'create' | 'edit'>('list')
   const [editing, setEditing] = useState<Article | undefined>()
 
+  const navActive = view === 'list' || view === 'create' || view === 'edit'
+
   return (
-    <div style={{ minHeight: '100vh', background: '#f9fafb', fontFamily: 'system-ui, -apple-system, sans-serif' }}>
-      {/* Sidebar */}
-      <div style={{ position: 'fixed', left: 0, top: 0, bottom: 0, width: 220, background: '#fff', borderRight: '1px solid #f3f4f6', padding: '24px 16px', display: 'flex', flexDirection: 'column', gap: 4 }}>
-        <div style={{ fontSize: 18, fontWeight: 800, color: '#4f46e5', marginBottom: 28, paddingLeft: 10 }}>CMS Admin</div>
+    <div className="app-shell">
+      <aside className="app-sidebar">
+        <div className="app-sidebar-brand">CMS Admin</div>
         {[
           { label: '📄 内容管理', v: 'list' as const },
         ].map(({ label, v }) => (
           <button
             key={v}
+            type="button"
+            className={`app-nav-btn${navActive ? ' app-nav-btn--active' : ''}`}
             onClick={() => { setView(v); setEditing(undefined) }}
-            style={{
-              width: '100%',
-              textAlign: 'left',
-              padding: '9px 14px',
-              borderRadius: 8,
-              border: 'none',
-              background: view === v || (v === 'list' && (view === 'create' || view === 'edit')) ? '#eef2ff' : 'transparent',
-              color: view === v || (v === 'list' && (view === 'create' || view === 'edit')) ? '#4f46e5' : '#6b7280',
-              cursor: 'pointer',
-              fontSize: 14,
-              fontWeight: view === v ? 600 : 400,
-            }}
           >
             {label}
           </button>
         ))}
-      </div>
+      </aside>
 
-      {/* Main */}
-      <div style={{ marginLeft: 220, padding: '36px 40px', maxWidth: 1000 }}>
-        {view === 'list' && (
-          <ArticleList
-            onEdit={(a) => { setEditing(a); setView('edit') }}
-            onCreate={() => { setEditing(undefined); setView('create') }}
-          />
-        )}
-        {(view === 'create' || view === 'edit') && (
-          <ArticleForm
-            article={editing}
-            onSaved={() => { setView('list'); setEditing(undefined) }}
-            onCancel={() => { setView('list'); setEditing(undefined) }}
-          />
-        )}
-      </div>
+      <main className="app-main">
+        <div className="app-main-inner">
+          {view === 'list' && (
+            <ArticleList
+              onEdit={(a) => { setEditing(a); setView('edit') }}
+              onCreate={() => { setEditing(undefined); setView('create') }}
+            />
+          )}
+          {(view === 'create' || view === 'edit') && (
+            <ArticleForm
+              article={editing}
+              onSaved={() => { setView('list'); setEditing(undefined) }}
+              onCancel={() => { setView('list'); setEditing(undefined) }}
+            />
+          )}
+        </div>
+      </main>
     </div>
   )
 }

@@ -69,6 +69,7 @@ export default defineConfig([
 ])
 ```
 后台管理系统：https://test-admin-e77.pages.dev
+测试：npm run dev
 部署：npm run build
 wrangler pages deploy dist --project-name test-admin
 今后：npm run deploy
