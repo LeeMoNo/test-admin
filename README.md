@@ -40,36 +40,29 @@ export default defineConfig([
 ])
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+技术栈：
+管理后台 (Cloudflare Pages)
+    │ 编写富文本 + 上传图片
+    ▼
+Cloudflare Workers (API 层)
+    ├── 图片 → 存 R2
+    ├── 文章元数据 → 存 Supabase
+    └── 富文本内容 → 存 Supabase
+    
+Flutter App
+    └── GET /articles → Workers → Supabase 返回数据
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+R2：流量免费，每月10GB免费存储
+Supabase：数据500 MB，文件存储1GB
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+
+
 后台管理系统：https://test-admin-e77.pages.dev
 测试：npm run dev
 部署：npm run build
 wrangler pages deploy dist --project-name test-admin
 今后：npm run deploy
+
+
+
+支持发布GIF图片

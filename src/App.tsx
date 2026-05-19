@@ -4,6 +4,10 @@ import StarterKit from '@tiptap/starter-kit'
 import Image from '@tiptap/extension-image'
 import Link from '@tiptap/extension-link'
 import Placeholder from '@tiptap/extension-placeholder'
+import React, { Suspense } from 'react';
+
+// 懒加载远程组件,部署的时候要注释掉
+const RemoteButton = React.lazy(() => import('remote_app/Button'));
 
 // ─── Config ────────────────────────────────────────────────
 const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:8787'
@@ -25,6 +29,10 @@ type Article = {
   status: 'draft' | 'published'
   created_at: string
   published_at: string | null
+  // 新增
+  view_count: number
+  like_count: number
+  dislike_count: number
 }
 
 // ─── API ───────────────────────────────────────────────────
@@ -274,7 +282,14 @@ function ArticleForm({
     <div className="form-shell">
       <div className="form-toolbar">
         <button type="button" onClick={onCancel} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#6b7280', fontSize: 14, display: 'flex', alignItems: 'center', gap: 6 }}>
-          ← 返回列表
+          ← 返回列表{/* 返回按钮旁边，仅编辑时显示 */}
+          {/* {article?.id && (
+            <div style={{ display: 'flex', gap: 16, fontSize: 13, color: '#6b7280', alignSelf: 'center' }}>
+              <span>👁 {article.view_count ?? 0} 阅读</span>
+              <span>👍 {article.like_count ?? 0} 点赞</span>
+              <span>👎 {article.dislike_count ?? 0} 踩</span>
+            </div>
+          )} */}
         </button>
         <div className="form-toolbar-actions">
           {msg && <span style={{ fontSize: 13, color: msg.startsWith('✅') ? '#059669' : '#dc2626', alignSelf: 'center' }}>{msg}</span>}
@@ -407,6 +422,31 @@ function ArticleList({
     load()
   }
 
+  function StatCard({ label, value, color }: { label: string; value: number; color: string }) {
+    return (
+      <div style={{
+        flex: 1,
+        background: '#fff',
+        border: '1px solid #f3f4f6',
+        borderRadius: 12,
+        padding: '16px 20px',
+      }}>
+        <div style={{ fontSize: 13, color: '#9ca3af', marginBottom: 8 }}>{label}</div>
+        <div style={{ fontSize: 28, fontWeight: 700, color }}>{value.toLocaleString()}</div>
+      </div>
+    )
+  }
+
+  // 在 ArticleList 组件里加状态
+  const [sortBy, setSortBy] = useState<'created_at' | 'view_count' | 'like_count'>('created_at')
+
+  // 排序逻辑（前端排，不用改 Worker）
+  const sorted = [...articles].sort((a, b) => {
+    if (sortBy === 'view_count') return (b.view_count ?? 0) - (a.view_count ?? 0)
+    if (sortBy === 'like_count') return (b.like_count ?? 0) - (a.like_count ?? 0)
+    return new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+  })
+
   return (
     <div>
       {/* Header */}
@@ -415,6 +455,10 @@ function ArticleList({
           <h1>内容管理</h1>
           <p className="page-header-sub">管理所有文章和视频</p>
         </div>
+        {/* 微前端远程组件测试，测试的时候需要Remote 应用 启动 */}
+        <Suspense fallback={<div>加载远程组件中...</div>}>
+          <RemoteButton text="文章刷新 (远程组件)" onClick={() => console.log('点击了远程组件')} />
+        </Suspense>
         <button type="button" className="btn-primary" onClick={onCreate}>
           + 新建内容
         </button>
@@ -430,9 +474,49 @@ function ArticleList({
         </div>
       )}
 
+      {/* 总览统计 */}
+      {!loading && articles.length > 0 && (() => {
+        const totalViews = articles.reduce((s, a) => s + (a.view_count ?? 0), 0)
+        const totalLikes = articles.reduce((s, a) => s + (a.like_count ?? 0), 0)
+        const totalDislike = articles.reduce((s, a) => s + (a.dislike_count ?? 0), 0)
+        const published = articles.filter(a => a.status === 'published').length
+
+        return (
+          <div style={{ display: 'flex', gap: 12, marginBottom: 28 }}>
+            <StatCard label="📄 已发布文章" value={published} color="#111827" />
+            <StatCard label="👁 总阅读量" value={totalViews} color="#4f46e5" />
+            <StatCard label="👍 总点赞数" value={totalLikes} color="#059669" />
+            <StatCard label="👎 总踩数" value={totalDislike} color="#dc2626" />
+          </div>
+        )
+      })()}
+
+      {/* 标题右边，新建按钮左边 */}
+      <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+        {(['created_at', 'view_count', 'like_count'] as const).map((key) => (
+          <button
+            key={key}
+            onClick={() => setSortBy(key)}
+            style={{
+              padding: '6px 14px',
+              borderRadius: 20,
+              border: '1px solid',
+              borderColor: sortBy === key ? '#4f46e5' : '#e5e7eb',
+              background: sortBy === key ? '#eef2ff' : '#fff',
+              color: sortBy === key ? '#4f46e5' : '#6b7280',
+              cursor: 'pointer',
+              fontSize: 12,
+              fontWeight: sortBy === key ? 600 : 400,
+            }}
+          >
+            {{ created_at: '最新', view_count: '最多阅读', like_count: '最多点赞' }[key]}
+          </button>
+        ))}
+      </div>
+
       {/* List */}
       <div className="article-list">
-        {articles.map((a) => (
+        {sorted.map((a) => (
           <article key={a.id} className="article-card">
             <span className="article-card-icon" aria-hidden>{a.type === 'video' ? '🎬' : '📄'}</span>
             <div className="article-card-body">
@@ -441,6 +525,16 @@ function ArticleList({
                 创建于 {new Date(a.created_at).toLocaleDateString('zh-CN')}
                 {a.published_at && ` · 发布于 ${new Date(a.published_at).toLocaleDateString('zh-CN')}`}
               </div>
+            </div>
+            {/* 状态 badge 前面插入统计栏 */}
+            <div style={{ display: 'flex', gap: 16, flexShrink: 0, fontSize: 13, color: '#9ca3af' }}>
+              <span title="阅读量">👁 {a.view_count ?? 0}</span>
+              <span title="点赞" style={{ color: a.like_count > 0 ? '#4f46e5' : '#9ca3af' }}>
+                👍 {a.like_count ?? 0}
+              </span>
+              <span title="踩" style={{ color: a.dislike_count > 0 ? '#dc2626' : '#9ca3af' }}>
+                👎 {a.dislike_count ?? 0}
+              </span>
             </div>
             <div className="article-card-trailing">
               <span className={`article-status article-status--${a.status === 'published' ? 'published' : 'draft'}`}>
