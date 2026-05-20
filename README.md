@@ -1,43 +1,8 @@
 # React + TypeScript + Vite
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
-Currently, two official plugins are available:
-
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
-
-## React Compiler
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
-
-## Expanding the ESLint configuration
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
 
 ```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+// --后台运营系统
 ```
 
 技术栈：
@@ -54,7 +19,7 @@ Flutter App
 
 R2：流量免费，每月10GB免费存储
 Supabase：数据500 MB，文件存储1GB
-
+支持发布GIF图片
 
 
 后台管理系统：https://test-admin-e77.pages.dev
@@ -65,4 +30,9 @@ wrangler pages deploy dist --project-name test-admin
 
 
 
-支持发布GIF图片
+手机上浏览器操作：
+admin.html是RedSun项目手机版运营编辑校正词条使用
+# test访问 http://localhost:5173/admin.html
+正式访问：https://test-admin-e77.pages.dev/admin.html
+
+

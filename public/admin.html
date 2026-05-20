@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html lang="zh">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <title>RedSun 管理</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: -apple-system, sans-serif;
+            background: #f5f5f5;
+        }
+
+        .topbar {
+            background: #E24B4A;
+            color: #fff;
+            padding: 14px 16px;
+            font-size: 17px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        .login {
+            padding: 40px 20px;
+        }
+
+        .login input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+            margin-bottom: 12px;
+        }
+
+        .login button {
+            width: 100%;
+            padding: 12px;
+            background: #E24B4A;
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        .search-bar {
+            padding: 12px;
+            background: #fff;
+            border-bottom: 1px solid #eee;
+            position: sticky;
+            top: 48px;
+        }
+
+        .search-bar input {
+            width: 100%;
+            padding: 10px 14px;
+            border: 1px solid #ddd;
+            border-radius: 20px;
+            font-size: 15px;
+            outline: none;
+        }
+
+        .list {
+            padding: 8px 0;
+        }
+
+        .card {
+            background: #fff;
+            margin: 6px 12px;
+            border-radius: 10px;
+            padding: 14px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, .06);
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .word {
+            font-size: 20px;
+            font-weight: 700;
+        }
+
+        .reading {
+            font-size: 13px;
+            color: #888;
+            margin-top: 2px;
+        }
+
+        .badges {
+            display: flex;
+            gap: 6px;
+        }
+
+        .badge {
+            font-size: 11px;
+            padding: 2px 8px;
+            border-radius: 10px;
+            background: #f0f0f0;
+            color: #555;
+        }
+
+        .badge.verified {
+            background: #e6f4ea;
+            color: #2d6a4f;
+        }
+
+        .badge.unverified {
+            background: #fff3e0;
+            color: #b45309;
+        }
+
+        .zh {
+            font-size: 15px;
+            margin-top: 8px;
+            color: #333;
+        }
+
+        .example {
+            font-size: 12px;
+            color: #999;
+            margin-top: 6px;
+            line-height: 1.5;
+        }
+
+        .edit-btn {
+            margin-top: 10px;
+            width: 100%;
+            padding: 8px;
+            background: #f0f0f0;
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            color: #333;
+        }
+
+        /* 编辑面板 */
+        .panel-bg {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, .5);
+            z-index: 100;
+        }
+
+        .panel-bg.open {
+            display: flex;
+            align-items: flex-end;
+        }
+
+        .panel {
+            background: #fff;
+            width: 100%;
+            border-radius: 16px 16px 0 0;
+            padding: 20px;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .panel h3 {
+            font-size: 16px;
+            margin-bottom: 16px;
+        }
+
+        .field {
+            margin-bottom: 12px;
+        }
+
+        .field label {
+            font-size: 12px;
+            color: #888;
+            display: block;
+            margin-bottom: 4px;
+        }
+
+        .field input,
+        .field select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 15px;
+        }
+
+        .field input.verified-toggle {
+            width: auto;
+            margin-right: 8px;
+        }
+
+        .save-btn {
+            width: 100%;
+            padding: 13px;
+            background: #E24B4A;
+            color: #fff;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            margin-top: 4px;
+        }
+
+        .cancel-btn {
+            width: 100%;
+            padding: 12px;
+            background: #f0f0f0;
+            color: #333;
+            border: none;
+            border-radius: 10px;
+            font-size: 15px;
+            margin-top: 8px;
+        }
+
+        .toast {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #333;
+            color: #fff;
+            padding: 10px 20px;
+            border-radius: 20px;
+            font-size: 14px;
+            opacity: 0;
+            transition: opacity .3s;
+            pointer-events: none;
+        }
+
+        .toast.show {
+            opacity: 1;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="topbar">🔴 RedSun 管理</div>
+
+    <!-- 登录页 -->
+    <div id="loginPage" class="login">
+        <p style="margin-bottom:20px;color:#666;font-size:14px">请输入管理密码</p>
+        <input id="pwdInput" type="password" placeholder="管理密码" />
+        <button onclick="doLogin()">进入</button>
+    </div>
+
+    <!-- 主界面 -->
+    <div id="mainPage" style="display:none">
+        <div class="search-bar">
+            <input id="searchInput" type="search" placeholder="搜索词条（日文/读音/中文）..." oninput="onSearch(this.value)" />
+            <!-- 加在 search-bar 里 -->
+            <button onclick="showMissing()" style=" padding: 8px 14px; background:#E24B4A; color:#fff;
+                border:none; border-radius:20px; font-size:14px; white-space:nowrap;">
+                未收录 🔍
+            </button>
+        </div>
+        <div class="list" id="list"></div>
+    </div>
+
+    <!-- 编辑面板 -->
+    <div class="panel-bg" id="panelBg">
+        <div class="panel">
+            <h3 id="panelTitle">编辑词条</h3>
+            <input type="hidden" id="editId" />
+            <div class="field"><label>词条</label><input id="f_word" /></div>
+            <div class="field"><label>读音</label><input id="f_reading" /></div>
+            <div class="field"><label>声调</label><input id="f_tone" type="number" /></div>
+            <div class="field"><label>中文释义</label><input id="f_zh_cn" /></div>
+            <div class="field">
+                <label>词性</label>
+                <select id="f_pos">
+                    <option>名词</option>
+                    <option>动词</option>
+                    <option>形容词</option>
+                    <option>副词</option>
+                    <option>代词</option>
+                    <option>接続詞</option>
+                    <option>助詞</option>
+                    <option>感動詞</option>
+                    <option>慣用句</option>
+                </select>
+            </div>
+            <div class="field">
+                <label>JLPT</label>
+                <select id="f_jlpt">
+                    <option>N5</option>
+                    <option>N4</option>
+                    <option>N3</option>
+                    <option>N2</option>
+                    <option>N1</option>
+                </select>
+            </div>
+            <div class="field"><label>频率 (1-5)</label><input id="f_frequency" type="number" min="1" max="5" /></div>
+            <div class="field"><label>日文例句</label><input id="f_example_jp" /></div>
+            <div class="field"><label>中文例句</label><input id="f_example_zh" /></div>
+            <div class="field">
+                <label>审核状态</label>
+                <select id="f_verified">
+                    <option value="0">未审核</option>
+                    <option value="1">已审核 ✓</option>
+                    <option value="2">已修改 ✎</option>
+                </select>
+            </div>
+            <button class="save-btn" onclick="saveEntry()">保存</button>
+            <button class="cancel-btn" onclick="closePanel()">取消</button>
+        </div>
+    </div>
+
+    <div class="toast" id="toast"></div>
+
+    <script>
+        const API = 'https://redsun-dict.wasai-test.workers.dev';
+        let adminKey = '';
+        let searchTimer = null;
+
+        function doLogin() {
+            const pwd = document.getElementById('pwdInput').value.trim();
+            if (!pwd) return;
+            adminKey = pwd;
+            document.getElementById('loginPage').style.display = 'none';
+            document.getElementById('mainPage').style.display = 'block';
+            doSearch('');
+        }
+
+        function onSearch(q) {
+            clearTimeout(searchTimer);
+            searchTimer = setTimeout(() => doSearch(q), 400);
+        }
+
+        async function doSearch(q) {
+            if (!q.trim()) return;
+            const res = await fetch(`${API}/search?q=${encodeURIComponent(q)}`);
+            const data = await res.json();
+            renderList(data.results || []);
+        }
+
+        function renderList(entries) {
+            const list = document.getElementById('list');
+            if (!entries.length) { list.innerHTML = '<p style="text-align:center;padding:30px;color:#aaa">没有结果</p>'; return; }
+            list.innerHTML = entries.map(e => `
+    <div class="card">
+      <div class="card-header">
+        <div>
+          <div class="word">${e.word}</div>
+          <div class="reading">${e.reading}　声调: ${e.tone ?? '—'}</div>
+        </div>
+        <div class="badges">
+          <span class="badge">${e.jlpt || ''}</span>
+          <span class="badge ${e.verified ? 'verified' : 'unverified'}">
+            ${e.verified ? '已审核' : '未审核'}
+          </span>
+        </div>
+      </div>
+      <div class="zh">${e.zh_cn}</div>
+      <div class="example">${e.example_jp || ''}<br>${e.example_zh || ''}</div>
+      <button class="edit-btn" onclick='openPanel(${JSON.stringify(e)})'>✎ 编辑</button>
+    </div>
+  `).join('');
+        }
+
+        function openPanel(e) {
+            document.getElementById('editId').value = e.id;
+            document.getElementById('panelTitle').textContent = `编辑：${e.word}`;
+            document.getElementById('f_word').value = e.word || '';
+            document.getElementById('f_reading').value = e.reading || '';
+            document.getElementById('f_tone').value = e.tone || '';
+            document.getElementById('f_zh_cn').value = e.zh_cn || '';
+            document.getElementById('f_pos').value = e.pos || '名词';
+            document.getElementById('f_jlpt').value = e.jlpt || 'N5';
+            document.getElementById('f_frequency').value = e.frequency || 1;
+            document.getElementById('f_example_jp').value = e.example_jp || '';
+            document.getElementById('f_example_zh').value = e.example_zh || '';
+            document.getElementById('f_verified').value = e.verified ?? 0;
+            document.getElementById('panelBg').classList.add('open');
+        }
+
+        function closePanel() {
+            document.getElementById('panelBg').classList.remove('open');
+        }
+
+        async function saveEntry() {
+            const id = document.getElementById('editId').value;
+            const body = {
+                word: document.getElementById('f_word').value,
+                reading: document.getElementById('f_reading').value,
+                tone: document.getElementById('f_tone').value,
+                zh_cn: document.getElementById('f_zh_cn').value,
+                pos: document.getElementById('f_pos').value,
+                jlpt: document.getElementById('f_jlpt').value,
+                frequency: parseInt(document.getElementById('f_frequency').value),
+                example_jp: document.getElementById('f_example_jp').value,
+                example_zh: document.getElementById('f_example_zh').value,
+                verified: parseInt(document.getElementById('f_verified').value),
+            };
+
+            const res = await fetch(`${API}/entry/${id}`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json', 'X-Admin-Key': adminKey },
+                body: JSON.stringify(body),
+            });
+
+            if (res.ok) {
+                showToast('✓ 保存成功');
+                closePanel();
+                doSearch(document.getElementById('searchInput').value);
+            } else {
+                showToast('✗ 密码错误或保存失败');
+            }
+        }
+
+        function showToast(msg) {
+            const t = document.getElementById('toast');
+            t.textContent = msg;
+            t.classList.add('show');
+            setTimeout(() => t.classList.remove('show'), 2500);
+        }
+
+        async function showMissing() {
+            const res = await fetch(`${API}/missing?key=${adminKey}`);
+            if (!res.ok) { showToast('密码错误'); return; }
+            const data = await res.json();
+
+            const list = document.getElementById('list');
+            list.innerHTML = `
+                <div style="padding:12px 16px;font-weight:600;color:#E24B4A">
+                未收录词 TOP ${data.results.length}
+                </div>` +
+                            data.results.map((r, i) => `
+                <div style="background:#fff;margin:6px 12px;border-radius:10px;
+                            padding:14px;display:flex;justify-content:space-between;align-items:center">
+                    <div>
+                    <span style="color:#aaa;font-size:13px">#${i + 1}　</span>
+                    <span style="font-size:17px;font-weight:600">${r.query}</span>
+                    </div>
+                    <div style="text-align:right">
+                    <div style="font-size:18px;font-weight:700;color:#E24B4A">${r.count}</div>
+                    <div style="font-size:11px;color:#aaa">次搜索</div>
+                    </div>
+                </div>
+                `).join('');
+        }
+    </script>
+</body>
+
+</html>
