@@ -318,6 +318,45 @@
         </div>
     </div>
 
+    <!-- 新增词条面板 -->
+    <div class="panel-bg" id="addPanelBg">
+        <div class="panel">
+            <h3>新增词条</h3>
+            <div class="field"><label>词条 *</label><input id="a_word" /></div>
+            <div class="field"><label>读音 *</label><input id="a_reading" /></div>
+            <div class="field"><label>声调</label><input id="a_tone" type="number" /></div>
+            <div class="field"><label>中文释义 *</label><input id="a_zh_cn" /></div>
+            <div class="field">
+                <label>词性</label>
+                <select id="a_pos">
+                    <option>名词</option>
+                    <option>动词</option>
+                    <option>形容词</option>
+                    <option>副词</option>
+                    <option>接続詞</option>
+                    <option>慣用句</option>
+                </select>
+            </div>
+            <div class="field">
+                <label>JLPT</label>
+                <select id="a_jlpt">
+                    <option>N5</option>
+                    <option>N4</option>
+                    <option>N3</option>
+                    <option>N2</option>
+                    <option>N1</option>
+                </select>
+            </div>
+            <div class="field"><label>频率 (1-5)</label>
+                <input id="a_frequency" type="number" min="1" max="5" value="3" />
+            </div>
+            <div class="field"><label>日文例句</label><input id="a_example_jp" /></div>
+            <div class="field"><label>中文例句</label><input id="a_example_zh" /></div>
+            <button class="save-btn" onclick="addEntry()">确认新增</button>
+            <button class="cancel-btn" onclick="closeAdd()">取消</button>
+        </div>
+    </div>
+
     <div class="toast" id="toast"></div>
 
     <script>
@@ -350,24 +389,24 @@
             const list = document.getElementById('list');
             if (!entries.length) { list.innerHTML = '<p style="text-align:center;padding:30px;color:#aaa">没有结果</p>'; return; }
             list.innerHTML = entries.map(e => `
-    <div class="card">
-      <div class="card-header">
-        <div>
-          <div class="word">${e.word}</div>
-          <div class="reading">${e.reading}　声调: ${e.tone ?? '—'}</div>
-        </div>
-        <div class="badges">
-          <span class="badge">${e.jlpt || ''}</span>
-          <span class="badge ${e.verified ? 'verified' : 'unverified'}">
-            ${e.verified ? '已审核' : '未审核'}
-          </span>
-        </div>
-      </div>
-      <div class="zh">${e.zh_cn}</div>
-      <div class="example">${e.example_jp || ''}<br>${e.example_zh || ''}</div>
-      <button class="edit-btn" onclick='openPanel(${JSON.stringify(e)})'>✎ 编辑</button>
-    </div>
-  `).join('');
+            <div class="card">
+            <div class="card-header">
+                <div>
+                <div class="word">${e.word}</div>
+                <div class="reading">${e.reading}　声调: ${e.tone ?? '—'}</div>
+                </div>
+                <div class="badges">
+                <span class="badge">${e.jlpt || ''}</span>
+                <span class="badge ${e.verified ? 'verified' : 'unverified'}">
+                    ${e.verified ? '已审核' : '未审核'}
+                </span>
+                </div>
+            </div>
+            <div class="zh">${e.zh_cn}</div>
+            <div class="example">${e.example_jp || ''}<br>${e.example_zh || ''}</div>
+            <button class="edit-btn" onclick='openPanel(${JSON.stringify(e)})'>✎ 编辑</button>
+            </div>
+        `).join('');
         }
 
         function openPanel(e) {
@@ -437,19 +476,70 @@
                 <div style="padding:12px 16px;font-weight:600;color:#E24B4A">
                 未收录词 TOP ${data.results.length}
                 </div>` +
-                            data.results.map((r, i) => `
+                data.results.map((r, i) => `
                 <div style="background:#fff;margin:6px 12px;border-radius:10px;
                             padding:14px;display:flex;justify-content:space-between;align-items:center">
                     <div>
                     <span style="color:#aaa;font-size:13px">#${i + 1}　</span>
                     <span style="font-size:17px;font-weight:600">${r.query}</span>
+                    <div style="font-size:11px;color:#aaa;margin-top:2px">最近搜索：${r.last_at}</div>
                     </div>
-                    <div style="text-align:right">
-                    <div style="font-size:18px;font-weight:700;color:#E24B4A">${r.count}</div>
-                    <div style="font-size:11px;color:#aaa">次搜索</div>
+                    <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px">
+                    <div style="font-size:18px;font-weight:700;color:#E24B4A">${r.count} 次</div>
+                    <button onclick="openAdd('${r.query}')" style="
+                        padding:5px 12px;background:#E24B4A;color:#fff;
+                        border:none;border-radius:14px;font-size:13px">+ 新增</button>
                     </div>
                 </div>
                 `).join('');
+        }
+
+        // 新增词条面板
+        function openAdd(word = '') {
+            document.getElementById('a_word').value = word;
+            document.getElementById('a_reading').value = '';
+            document.getElementById('a_tone').value = '';
+            document.getElementById('a_zh_cn').value = '';
+            document.getElementById('a_example_jp').value = '';
+            document.getElementById('a_example_zh').value = '';
+            document.getElementById('addPanelBg').classList.add('open');
+        }
+
+        function closeAdd() {
+            document.getElementById('addPanelBg').classList.remove('open');
+        }
+
+        async function addEntry() {
+            const body = {
+                word: document.getElementById('a_word').value.trim(),
+                reading: document.getElementById('a_reading').value.trim(),
+                tone: document.getElementById('a_tone').value || null,
+                zh_cn: document.getElementById('a_zh_cn').value.trim(),
+                pos: document.getElementById('a_pos').value,
+                jlpt: document.getElementById('a_jlpt').value,
+                frequency: parseInt(document.getElementById('a_frequency').value),
+                example_jp: document.getElementById('a_example_jp').value.trim() || null,
+                example_zh: document.getElementById('a_example_zh').value.trim() || null,
+            };
+
+            if (!body.word || !body.reading || !body.zh_cn) {
+                showToast('词条、读音、中文释义必填'); return;
+            }
+
+            const res = await fetch(`${API}/entry`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'X-Admin-Key': adminKey },
+                body: JSON.stringify(body),
+            });
+
+            const data = await res.json();
+            if (res.ok) {
+                showToast(`✓ 新增成功，ID: ${data.id}`);
+                closeAdd();
+                showMissing(); // 刷新未收录列表
+            } else {
+                showToast('✗ ' + (data.error || '新增失败'));
+            }
         }
     </script>
 </body>
